@@ -1,5 +1,5 @@
 <?php
-namespace Yak;
+namespace DataSlurp;
 
 class Table
 {

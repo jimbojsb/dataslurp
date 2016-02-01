@@ -1,5 +1,5 @@
 {
-    "name": "jimbojsb/yak",
+    "name": "jimbojsb/dataslurp",
     "description": "Database seed and sync tools for PHP and PDO",
     "license": "MIT",
     "authors": [
@@ -14,7 +14,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Yak\\": "src/"
+            "DataSlurp\\": "src/"
         }
     }
 }

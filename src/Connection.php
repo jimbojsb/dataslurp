@@ -1,5 +1,5 @@
 <?php
-namespace Yak;
+namespace DataSlurp;
 
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;

@@ -1,7 +1,7 @@
 <?php
-namespace Yak\Loader;
+namespace DataSlurp\Loader;
 
-use Yak\Connection;
+use DataSlurp\Connection;
 
 class DelimittedLoader
 {
