@@ -12,6 +12,9 @@
     "require": {
         "psr/log": "1.0"
     },
+    "require-dev": {
+        "monolog/monolog": "1.*"
+    },
     "autoload": {
         "psr-4": {
             "DataSlurp\\": "src/"

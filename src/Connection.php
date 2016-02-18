@@ -3,14 +3,18 @@ namespace DataSlurp;
 
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
-use Psr\Log\LoggerInterface;
+use Psr\Log\LoggerTrait;
 
 class Connection implements LoggerAwareInterface
 {
     use LoggerAwareTrait;
+    use LoggerTrait;
 
     /** @var  \PDO */
     protected $pdo;
+
+    protected $maxPacket;
+    protected $databaseName;
 
     /**
      * Connection constructor.
@@ -23,12 +27,32 @@ class Connection implements LoggerAwareInterface
 
     public function getDatabaseName()
     {
-        return $this->pdo->query("SELECT DATABASE()")->fetchColumn();
+        if (!isset($this->databaseName)) {
+            $this->databaseName = $this->pdo->query("SELECT DATABASE()")->fetchColumn();
+        }
+        return $this->databaseName;
+    }
+
+    public function disableForeignKeyChecks()
+    {
+        $this->pdo->query("SET FOREIGN_KEY_CHECKS=0");
+    }
+
+    public function getMaxPacket()
+    {
+        if (!isset($this->maxPacket)) {
+            $this->maxPacket = (int) $this->pdo->query("SHOW VARIABLES LIKE 'max_allowed_packet'")->fetchColumn(1);
+        }
+        return $this->maxPacket;
     }
 
     public function getTable($tableName)
     {
-        return new Table($tableName, $this);
+        try {
+            return new Table($tableName, $this);
+        } catch (\PDOException $e) {
+            return false;
+        }
     }
 
     public function quote($string)
@@ -40,4 +64,11 @@ class Connection implements LoggerAwareInterface
     {
         return $this->pdo;
     }
+
+    public function log($level, $message, array $context = array())
+    {
+        $this->logger->log($level, $message, $context);
+    }
+
+
 }

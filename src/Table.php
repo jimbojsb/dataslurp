@@ -63,14 +63,78 @@ class Table
         }
     }
 
-    public function truncate()
+    public function getColumns()
     {
-
+        return $this->columns;
     }
 
-    public function select()
+    public function truncate()
     {
+        $this->connection->getPdo()->quote("TRUNCATE TABLE $this->name");
+    }
 
+    public function select($columns = "*", $where = null, $limit = null, $offset = null)
+    {
+        $sql = "SELECT ";
+        if (is_string($columns)) {
+            $sql .= $columns;
+        } else if (is_array($columns)) {
+            $sql .= "`" . implode("`,`", $columns) . "`";
+        }
+        $sql .= " FROM $this->name";
+        $rows = $this->connection->getPdo()->query($sql)->fetchAll(\PDO::FETCH_ASSOC);
+        return $rows;
+    }
+
+    public function bulkInsert(array $rows)
+    {
+        $baseInsertSql = "INSERT INTO $this->name VALUES ";
+        $insertSql = $baseInsertSql;
+        $expectedInsertCount = 0;
+
+        foreach ($rows as $row) {
+            foreach ($row as $key => &$val) {
+                if ($val === null) {
+                    $val = 'NULL';
+                } else {
+                    $val = "'" . addslashes($val) . "'";
+                }
+            }
+            $vals = array_values($row);
+            $rowData = "(" . implode(",", $vals) . ")";
+
+            if (strlen($insertSql) + strlen($rowData) + 1 < $this->connection->getMaxPacket()) {
+                $expectedInsertCount++;
+                $insertSql .= $rowData . ",";
+            } else {
+                // remove last comma
+                $insertSql = substr($insertSql, 0, strlen($insertSql) - 1);
+                $pdo = $this->connection->getPdo();
+                $result = $pdo->query($insertSql);
+                if (!$result) {
+                    throw new \Exception(print_r($pdo->errorInfo(), true));
+                }
+                if ($result->rowCount() != $expectedInsertCount) {
+                    throw new \Exception("Expected to see $expectedInsertCount inserted, only saw ". $result->rowCount());
+                }
+
+                $expectedInsertCount = 0;
+                $expectedInsertCount++;
+                $insertSql = $baseInsertSql;
+                $insertSql .= $rowData . ",";
+            }
+        }
+
+        if ($insertSql != $baseInsertSql) {
+            $insertSql = substr($insertSql, 0, strlen($insertSql) - 1);
+            var_dump($insertSql);
+
+            $pdo = $this->connection->getPdo();
+            $result = $pdo->query($insertSql);
+            if (!$result) {
+                throw new \Exception(print_r($pdo->errorInfo(), true));
+            }
+        }
     }
 
     private function loadSchema()
