@@ -46,6 +46,10 @@ class Connection implements LoggerAwareInterface
         return $this->maxPacket;
     }
 
+    /**
+     * @param $tableName
+     * @return bool|Table
+     */
     public function getTable($tableName)
     {
         try {
@@ -55,6 +59,9 @@ class Connection implements LoggerAwareInterface
         }
     }
 
+    /**
+     * @return Table[]
+     */
     public function getTables()
     {
         $tables = [];

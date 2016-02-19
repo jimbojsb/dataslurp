@@ -149,4 +149,11 @@ class Table
             $this->columns[$col["Field"]] = $col;
         }
     }
+
+    function __toString()
+    {
+        return $this->name;
+    }
+
+
 }
