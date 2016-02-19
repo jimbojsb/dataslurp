@@ -143,10 +143,10 @@ class Table
     {
         $cols = $this->connection->getPdo()->query("DESCRIBE $this->name")->fetchAll(\PDO::FETCH_ASSOC);
         foreach ($cols as $col) {
-            if (isset($cols["Key"]) && $cols["Key"] == 'PRI') {
-                $this->primaryKey = $cols["Field"];
+            if (isset($col["Key"]) && $col["Key"] == 'PRI') {
+                $this->primaryKey = $col["Field"];
             }
-            $this->columns[$col["Field"]] = $col;
+            $this->columns[$col["Field"]] = $col['Type'];
         }
     }
 
