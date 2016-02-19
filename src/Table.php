@@ -70,7 +70,7 @@ class Table
 
     public function truncate()
     {
-        $this->connection->getPdo()->quote("TRUNCATE TABLE $this->name");
+        $this->connection->getPdo()->query("TRUNCATE $this->name");
     }
 
     public function select($columns = "*", $where = null, $limit = null, $offset = null)
@@ -127,8 +127,6 @@ class Table
 
         if ($insertSql != $baseInsertSql) {
             $insertSql = substr($insertSql, 0, strlen($insertSql) - 1);
-            var_dump($insertSql);
-
             $pdo = $this->connection->getPdo();
             $result = $pdo->query($insertSql);
             if (!$result) {

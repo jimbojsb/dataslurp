@@ -73,7 +73,7 @@ class CopyTransfer
                     }
                     $columnsToSelect[] = $sourceColumnName;
                 } else {
-                    $this->destinationConnection->warning("$sourceColumnName missing from destination");
+                    $this->destinationConnection->warning("$sourceColumnName missing from $table on destination");
                 }
             }
             $sourceRows = $sourceTable->select($columnsToSelect);
