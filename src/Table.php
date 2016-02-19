@@ -92,6 +92,10 @@ class Table
 
     public function bulkInsert(array $rows)
     {
+        if (!$rows) {
+            return;
+        }
+        
         $insertColumns = array_keys($rows[0]);
         $insertColumnsString = "(`" . implode("`,`", $insertColumns) . "`)";
         $baseInsertSql = "INSERT INTO $this->name $insertColumnsString VALUES ";
