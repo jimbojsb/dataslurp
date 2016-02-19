@@ -55,6 +55,16 @@ class Connection implements LoggerAwareInterface
         }
     }
 
+    public function getTables()
+    {
+        $tables = [];
+        $result = $this->pdo->query("SHOW TABLES");
+        while ($table = $result->fetch(\PDO::FETCH_COLUMN)) {
+            $tables[] = new Table($table, $this);
+        }
+        return $tables;
+    }
+
     public function quote($string)
     {
         return $this->pdo->quote($string);

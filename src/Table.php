@@ -24,7 +24,11 @@ class Table
     public function insert(array $data)
     {
         $hasColumns = array_keys($data) != $data;
+    }
 
+    public function drop()
+    {
+        $this->connection->getPdo()->query("DROP TABLE $this->name");
     }
 
     public function upsert($data, $columns = [])

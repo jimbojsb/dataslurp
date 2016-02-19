@@ -18,5 +18,8 @@ $destinationConnection = new \DataSlurp\Connection($destinationPdo);
 //$destinationConnection->setLogger($logger);
 
 
+var_dump($sourceConnection->getTables());
+
+
 $copyTransfer = new \DataSlurp\Transfer\CopyTransfer($sourceConnection, $destinationConnection, $config);
-$copyTransfer->execute();
+//$copyTransfer->execute();
