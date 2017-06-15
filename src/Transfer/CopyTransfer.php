@@ -32,30 +32,29 @@ class CopyTransfer
     {
         $this->destinationConnection->disableForeignKeyChecks();
 
-        foreach ($this->config["tables"] as $table => $params) {
+        foreach ($this->config['tables'] as $table => $params) {
 
             // fix variables if the table has no params and is just a string
             if (is_int($table)) {
-                $table = $this->config["tables"][$table];
+                $table = $this->config['tables'][$table];
                 $params = [];
             }
 
             $sourceTable = $this->sourceConnection->getTable($table);
             if (!$sourceTable) {
-                $this->sourceConnection->warning("$table not found on source connection. Skipping.");
+                $this->sourceConnection->warning("$table not found on source. Skipping.");
                 continue;
             }
 
-            if (isset($params["destination_table"])) {
-                $destinationTableName = $params["destination_table"];
+            if (isset($params['destination_table'])) {
+                $destinationTableName = $params['destination_table'];
             } else {
                 $destinationTableName = $table;
             }
 
-
             $destinationTable = $this->destinationConnection->getTable($destinationTableName);
             if (!$destinationTable) {
-                $this->destinationConnection->warning("$table not found on destination connection. Skipping.");
+                $this->destinationConnection->warning("$table not found on destination. Skipping.");
                 continue;
             }
 
@@ -65,15 +64,15 @@ class CopyTransfer
             $destinationColumns = $destinationTable->getColumns();
 
             $columnsToSelect = [];
-            foreach ($sourceColumns as $sourceColumnName => $sourceColumnDefiniton) {
+            foreach ($sourceColumns as $sourceColumnName => $sourceColumnDefinition) {
                 if (isset($destinationColumns[$sourceColumnName])) {
                     $destinationColumnDefinition = $destinationColumns[$sourceColumnName];
-                    if ($sourceColumnDefiniton != $destinationColumns[$sourceColumnName]) {
-                        $this->destinationConnection->warning("source and destination mistmatch: source is $sourceColumnDefiniton, destination is $destinationColumnDefinition");
+                    if ($sourceColumnDefinition != $destinationColumns[$sourceColumnName]) {
+                        $this->destinationConnection->warning("$table.$sourceColumnName definition mismatch: source is $sourceColumnDefinition, destination is $destinationColumnDefinition");
                     }
                     $columnsToSelect[] = $sourceColumnName;
                 } else {
-                    $this->destinationConnection->warning("$sourceColumnName missing from $table on destination");
+                    $this->destinationConnection->warning("$table.$sourceColumnName: column missing on destination");
                 }
             }
             $sourceRows = $sourceTable->select($columnsToSelect);
