@@ -95,7 +95,7 @@ class Table
         if (!$rows) {
             return;
         }
-        
+
         $insertColumns = array_keys($rows[0]);
         $insertColumnsString = "(`" . implode("`,`", $insertColumns) . "`)";
         $baseInsertSql = "INSERT INTO $this->name $insertColumnsString VALUES ";
@@ -103,30 +103,20 @@ class Table
         $expectedInsertCount = 0;
 
         foreach ($rows as $row) {
-            foreach ($row as $key => &$val) {
+            foreach ($row as $key => $val) {
                 if ($val === null) {
-                    $val = 'NULL';
+                    $row[$key] = 'NULL';
                 } else {
-                    $val = "'" . addslashes($val) . "'";
+                    $row[$key] = "'" . addslashes($val) . "'";
                 }
             }
-            $vals = array_values($row);
-            $rowData = "(" . implode(",", $vals) . ")";
+            $rowData = "(" . implode(",", array_values($row)) . ")";
 
             if (strlen($insertSql) + strlen($rowData) + 1 < $this->connection->getMaxPacket()) {
                 $expectedInsertCount++;
                 $insertSql .= $rowData . ",";
             } else {
-                // remove last comma
-                $insertSql = substr($insertSql, 0, strlen($insertSql) - 1);
-                $pdo = $this->connection->getPdo();
-                $result = $pdo->query($insertSql);
-                if (!$result) {
-                    throw new \Exception(print_r($pdo->errorInfo(), true));
-                }
-                if ($result->rowCount() != $expectedInsertCount) {
-                    throw new \Exception("Expected to see $expectedInsertCount inserted, only saw ". $result->rowCount());
-                }
+                $this->runInsert($insertSql, $expectedInsertCount);
 
                 $expectedInsertCount = 0;
                 $expectedInsertCount++;
@@ -134,14 +124,10 @@ class Table
                 $insertSql .= $rowData . ",";
             }
         }
+        unset($rows);
 
         if ($insertSql != $baseInsertSql) {
-            $insertSql = substr($insertSql, 0, strlen($insertSql) - 1);
-            $pdo = $this->connection->getPdo();
-            $result = $pdo->query($insertSql);
-            if (!$result) {
-                throw new \Exception(print_r($pdo->errorInfo(), true));
-            }
+            $this->runInsert($insertSql, $expectedInsertCount);
         }
     }
 
@@ -156,9 +142,30 @@ class Table
         }
     }
 
-    function __toString()
+    public function __toString()
     {
         return $this->name;
+    }
+
+    /**
+     * @param $insertSql
+     * @param $expectedInsertCount
+     *
+     * @return array
+     * @throws \Exception
+     */
+    protected function runInsert($insertSql, $expectedInsertCount)
+    {
+        // remove extra comma
+        $insertSql = rtrim($insertSql, ',');
+        $pdo = $this->connection->getPdo();
+        $result = $pdo->query($insertSql);
+        if (!$result) {
+            throw new \Exception(print_r($pdo->errorInfo(), true));
+        }
+        if ($result->rowCount() != $expectedInsertCount) {
+            throw new \Exception("Expected to see $expectedInsertCount inserted, only saw " . $result->rowCount());
+        }
     }
 
 
