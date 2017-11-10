@@ -26,6 +26,10 @@ class CopyTransfer
         $this->sourceConnection = $sourceConnection;
         $this->destinationConnection = $destinationConnection;
         $this->config = $config;
+        if (array_key_exists('chunk_size', $config) === true && is_integer($config['chunk_size']) === false ||
+            array_key_exists('chunk_size', $config) === false) {
+            $this->config['chunk_size'] = null;
+        }
     }
 
     public function execute()
@@ -75,8 +79,18 @@ class CopyTransfer
                     $this->destinationConnection->warning("$table.$sourceColumnName: column missing on destination");
                 }
             }
-            $sourceRows = $sourceTable->select($columnsToSelect);
-            $destinationTable->bulkInsert($sourceRows);
+
+            $limit = $this->config['chunk_size'];
+            if ($limit !== null) {
+                $offset = 0;
+                while ($sourceRows = $sourceTable->select($columnsToSelect, $limit, $offset)) {
+                    $destinationTable->bulkInsert($sourceRows);
+                    $offset += count($sourceRows);
+                }
+            } else {
+                $sourceRows = $sourceTable->select($columnsToSelect);
+                $destinationTable->bulkInsert($sourceRows);
+            }
         }
     }
 }
