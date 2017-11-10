@@ -1,4 +1,5 @@
 <?php
+
 namespace DataSlurp;
 
 class Table
@@ -11,6 +12,8 @@ class Table
 
     /**
      * Table constructor.
+     *
+     * @param string     $name
      * @param Connection $connection
      */
     public function __construct($name, Connection $connection)
@@ -77,7 +80,7 @@ class Table
         $this->connection->getPdo()->query("TRUNCATE $this->name");
     }
 
-    public function select($columns = "*", $where = null, $limit = null, $offset = null)
+    public function select($columns = "*", $limit = null, $offset = 0)
     {
         $sql = "SELECT ";
         if (is_string($columns)) {
@@ -86,7 +89,11 @@ class Table
             $sql .= "`" . implode("`,`", $columns) . "`";
         }
         $sql .= " FROM $this->name";
+        if ($limit !== null) {
+            $sql .= " LIMIT $offset, $limit";
+        }
         $rows = $this->connection->getPdo()->query($sql)->fetchAll(\PDO::FETCH_ASSOC);
+
         return $rows;
     }
 
@@ -112,19 +119,15 @@ class Table
             }
             $rowData = "(" . implode(",", array_values($row)) . ")";
 
-            if (strlen($insertSql) + strlen($rowData) + 1 < $this->connection->getMaxPacket()) {
-                $expectedInsertCount++;
-                $insertSql .= $rowData . ",";
-            } else {
+            if (strlen($insertSql) + strlen($rowData) + 1 > $this->connection->getMaxPacket()) {
                 $this->runInsert($insertSql, $expectedInsertCount);
 
                 $expectedInsertCount = 0;
-                $expectedInsertCount++;
                 $insertSql = $baseInsertSql;
-                $insertSql .= $rowData . ",";
             }
+            $expectedInsertCount++;
+            $insertSql .= $rowData . ",";
         }
-        unset($rows);
 
         if ($insertSql != $baseInsertSql) {
             $this->runInsert($insertSql, $expectedInsertCount);
@@ -166,7 +169,6 @@ class Table
         if ($result->rowCount() != $expectedInsertCount) {
             throw new \Exception("Expected to see $expectedInsertCount inserted, only saw " . $result->rowCount());
         }
+        $result->closeCursor();
     }
-
-
 }
